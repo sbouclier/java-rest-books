@@ -9,6 +9,18 @@
 	<packaging>jar</packaging>
 
 	<name>java-rest-books</name>
+    <url>https://github.com/sbouclier/java-rest-books</url>
+
+    <scm>
+        <url>https://github.com/sbouclier/java-rest-books</url>
+        <connection>scm:git:ssh://git@github.com/sbouclier/java-rest-books.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/sbouclier/java-rest-books.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    <ciManagement>
+        <url>https://travis-ci.org/sbouclier/java-rest-books/</url>
+        <system>Travis</system>
+    </ciManagement>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -20,6 +32,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss</maven.build.timestamp.format>
 		<java.version>1.8</java.version>
 	</properties>
 
@@ -68,6 +81,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
+            <!-- Code coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -87,6 +102,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>4.3.0</version>
+                <configuration>
+                    <timestampFormat>${maven.build.timestamp.format}</timestampFormat>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -128,6 +151,5 @@
 			</snapshots>
 		</pluginRepository>
 	</pluginRepositories>
-
-
+    
 </project>
