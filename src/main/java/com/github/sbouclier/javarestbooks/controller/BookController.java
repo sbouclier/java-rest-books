@@ -57,4 +57,20 @@ public class BookController {
                 .orElseThrow(() -> new BookNotFoundException(isbn));
     }
 
+    @PutMapping("/{isbn}")
+    public ResponseEntity<Book> updateBook(@PathVariable("isbn") String isbn, @Valid @RequestBody Book book) {
+        return bookRepository.findByIsbn(isbn)
+                .map(bookToUpdate -> {
+                    bookToUpdate.setIsbn(book.getIsbn());
+                    bookToUpdate.setTitle(book.getTitle());
+                    bookToUpdate.setDescription(book.getDescription());
+                    bookToUpdate.setAuthors(book.getAuthors());
+                    bookToUpdate.setPublisher(book.getPublisher());
+                    bookRepository.save(bookToUpdate);
+
+                    return new ResponseEntity<>(bookToUpdate, HttpStatus.OK);
+                })
+                .orElseThrow(() -> new BookNotFoundException(isbn));
+    }
+
 }

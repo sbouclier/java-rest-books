@@ -134,5 +134,47 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$[0].message", containsString("could not find book with ISBN: '000-1234567890'")))
                 .andDo(MockMvcResultHandlers.print());
     }
-    
+
+    // ---------- update book ----------
+
+    @Test
+    public void should_update_valid_book_and_return_ok_status() throws Exception {
+        Book book = new Book("978-0321356680","Book updated","Publisher");
+        book.setDescription("New description");
+
+        Author author = new Author("John","Doe");
+        book.addAuthor(author);
+
+        mockMvc.perform(put("/api/books/978-0321356680")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json(book)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.title", is("Book updated")))
+                .andExpect(jsonPath("$.description", is("New description")))
+                .andExpect(jsonPath("$.publisher", is("Publisher")))
+                .andExpect(jsonPath("$.authors[0].firstName", is("John")))
+                .andExpect(jsonPath("$.authors[0].lastName", is("Doe")))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    public void should_not_update_unknown_book_and_return_not_found_status() throws Exception {
+        Book book = new Book("978-0321356680","Book updated","Publisher");
+        book.setDescription("New description");
+
+        Author author = new Author("John","Doe");
+        book.addAuthor(author);
+
+        mockMvc.perform(put("/api/books/000-1234567890")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json(book)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$[0].logref", is("error")))
+                .andExpect(jsonPath("$[0].message", containsString("could not find book with ISBN: '000-1234567890'")))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
 }
