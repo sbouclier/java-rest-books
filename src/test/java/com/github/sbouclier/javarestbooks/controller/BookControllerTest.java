@@ -135,6 +135,67 @@ public class BookControllerTest {
                 .andDo(MockMvcResultHandlers.print());
     }
 
+    // ---------- get books ----------
+
+    @Test
+    public void should_get_all_books_with_ok_status() throws Exception {
+        mockMvc.perform(get("/api/books").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Total-Count", is("4")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$", hasSize(4)))
+                .andExpect(jsonPath("$[*].id", contains(1,2,3,4)))  // sorted by id asc by default
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    public void should_get_first_page_paginated_books() throws Exception {
+        mockMvc.perform(get("/api/books?page=0&size=2").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isPartialContent())
+                .andExpect(header().string("X-Total-Count", is("4")))
+                .andExpect(header().string("first", is("/api/books?page=0&size=2")))
+                .andExpect(header().string("last", is("/api/books?page=1&size=2")))
+                .andExpect(header().string("prev", is(nullValue())))
+                .andExpect(header().string("next", is("/api/books?page=1&size=2")))
+                .andExpect(header().string("X-Total-Count", is("4")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].id", contains(1,2)))  // sorted by id asc by default
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    public void should_get_last_page_paginated_books() throws Exception {
+        mockMvc.perform(get("/api/books?page=1&size=2").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isPartialContent())
+                .andExpect(header().string("X-Total-Count", is("4")))
+                .andExpect(header().string("first", is("/api/books?page=0&size=2")))
+                .andExpect(header().string("last", is("/api/books?page=1&size=2")))
+                .andExpect(header().string("prev", is("/api/books?page=0&size=2")))
+                .andExpect(header().string("next", is(nullValue())))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].id", contains(3,4)))  // sorted by id asc by default
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    public void should_sort_books() throws Exception {
+        mockMvc.perform(get("/api/books?sort=title&order=desc").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Total-Count", is("4")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$", hasSize(4)))
+                .andExpect(jsonPath("$[*].id", contains(2,4,3,1)))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    public void should_not_get_books_for_bad_pagination() throws Exception {
+        mockMvc.perform(get("/api/books?page=999").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent())
+                .andDo(MockMvcResultHandlers.print());
+    }
+
     // ---------- update book ----------
 
     @Test

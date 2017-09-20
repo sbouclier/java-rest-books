@@ -57,6 +57,46 @@ public class BookController {
                 .orElseThrow(() -> new BookNotFoundException(isbn));
     }
 
+    @GetMapping
+    public ResponseEntity<List<Book>> getAllBooks(
+            @PageableDefault(size = MAX_PAGE_SIZE) Pageable pageable,
+            @RequestParam(required = false, defaultValue = "id") String sort,
+            @RequestParam(required = false, defaultValue = "asc") String order) {
+        final PageRequest pr = PageRequest.of(
+                pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by("asc" .equals(order) ? Sort.Direction.ASC : Sort.Direction.DESC, sort)
+        );
+
+        Page<Book> booksPage = bookRepository.findAll(pr);
+
+        if (booksPage.getContent().isEmpty()) {
+            return new ResponseEntity(HttpStatus.NO_CONTENT);
+        } else {
+            long totalBooks = booksPage.getTotalElements();
+            int nbPageBooks = booksPage.getNumberOfElements();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Total-Count", String.valueOf(totalBooks));
+
+            if (nbPageBooks < totalBooks) {
+                headers.add("first", buildPageUri(PageRequest.of(0, booksPage.getSize())));
+                headers.add("last", buildPageUri(PageRequest.of(booksPage.getTotalPages() - 1, booksPage.getSize())));
+
+                if (booksPage.hasNext()) {
+                    headers.add("next", buildPageUri(booksPage.nextPageable()));
+                }
+
+                if (booksPage.hasPrevious()) {
+                    headers.add("prev", buildPageUri(booksPage.previousPageable()));
+                }
+
+                return new ResponseEntity<>(booksPage.getContent(), headers, HttpStatus.PARTIAL_CONTENT);
+            } else {
+                return new ResponseEntity(booksPage.getContent(), headers, HttpStatus.OK);
+            }
+        }
+    }
+
     @PutMapping("/{isbn}")
     public ResponseEntity<Book> updateBook(@PathVariable("isbn") String isbn, @Valid @RequestBody Book book) {
         return bookRepository.findByIsbn(isbn)
@@ -93,6 +133,13 @@ public class BookController {
                     return new ResponseEntity(HttpStatus.NO_CONTENT);
                 })
                 .orElseThrow(() -> new BookNotFoundException(isbn));
+    }
+
+    private String buildPageUri(Pageable page) {
+        return fromUriString("/api/books")
+                .query("page={page}&size={size}")
+                .buildAndExpand(page.getPageNumber(), page.getPageSize())
+                .toUriString();
     }
 
 }
