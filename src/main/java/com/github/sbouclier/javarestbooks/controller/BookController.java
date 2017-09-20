@@ -73,4 +73,14 @@ public class BookController {
                 .orElseThrow(() -> new BookNotFoundException(isbn));
     }
 
+    @DeleteMapping("/{isbn}")
+    public ResponseEntity<?> deleteBook(@PathVariable("isbn") String isbn) {
+        return bookRepository.findByIsbn(isbn)
+                .map(book -> {
+                    bookRepository.delete(book);
+                    return new ResponseEntity(HttpStatus.NO_CONTENT);
+                })
+                .orElseThrow(() -> new BookNotFoundException(isbn));
+    }
+
 }

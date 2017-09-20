@@ -177,4 +177,24 @@ public class BookControllerTest {
                 .andDo(MockMvcResultHandlers.print());
     }
 
+    // ---------- delete book ----------
+
+    @Test
+    public void should_delete_existing_book_and_return_no_content_status() throws Exception {
+        mockMvc.perform(delete("/api/books/978-0321356680")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    public void should_not_delete_unknown_book_and_return_not_found_status() throws Exception {
+        mockMvc.perform(delete("/api/books/000-1234567890")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$[0].logref", is("error")))
+                .andExpect(jsonPath("$[0].message", containsString("could not find book with ISBN: '000-1234567890'")))
+                .andDo(MockMvcResultHandlers.print());
+    }
 }
