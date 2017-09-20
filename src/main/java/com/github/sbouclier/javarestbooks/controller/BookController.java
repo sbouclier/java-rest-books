@@ -50,4 +50,11 @@ public class BookController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    @GetMapping("/{isbn}")
+    public ResponseEntity<Book> getBook(@PathVariable("isbn") String isbn) {
+        return bookRepository.findByIsbn(isbn)
+                .map(book -> new ResponseEntity<>(book, HttpStatus.OK))
+                .orElseThrow(() -> new BookNotFoundException(isbn));
+    }
+
 }

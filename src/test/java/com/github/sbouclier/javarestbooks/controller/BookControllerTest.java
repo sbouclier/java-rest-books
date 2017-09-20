@@ -112,4 +112,27 @@ public class BookControllerTest {
                 .andDo(MockMvcResultHandlers.print());
     }
 
+    // ---------- get book ----------
+
+    @Test
+    public void should_get_valid_book_with_ok_status() throws Exception {
+        mockMvc.perform(get("/api/books/978-0321356680").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.title", is("Effective Java")))
+                .andExpect(jsonPath("$.publisher", is("Addison Wesley")))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    public void should_no_get_unknown_book_with_not_found_status() throws Exception {
+        mockMvc.perform(get("/api/books/000-1234567890").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$[0].logref", is("error")))
+                .andExpect(jsonPath("$[0].message", containsString("could not find book with ISBN: '000-1234567890'")))
+                .andDo(MockMvcResultHandlers.print());
+    }
+    
 }
