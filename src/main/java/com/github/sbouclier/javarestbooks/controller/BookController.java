@@ -73,6 +73,18 @@ public class BookController {
                 .orElseThrow(() -> new BookNotFoundException(isbn));
     }
 
+    @PatchMapping("/{isbn}")
+    public ResponseEntity<Book> updateBookDescription(@PathVariable("isbn") String isbn, @RequestBody String description) {
+        return bookRepository.findByIsbn(isbn)
+                .map(book -> {
+                    book.setDescription(description);
+                    bookRepository.save(book);
+
+                    return new ResponseEntity<>(book, HttpStatus.OK);
+                })
+                .orElseThrow(() -> new BookNotFoundException(isbn));
+    }
+
     @DeleteMapping("/{isbn}")
     public ResponseEntity<?> deleteBook(@PathVariable("isbn") String isbn) {
         return bookRepository.findByIsbn(isbn)

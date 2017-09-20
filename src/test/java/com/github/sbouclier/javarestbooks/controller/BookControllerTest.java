@@ -177,6 +177,32 @@ public class BookControllerTest {
                 .andDo(MockMvcResultHandlers.print());
     }
 
+    // ---------- update book's description ----------
+
+    @Test
+    public void should_update_existing_book_description_and_return_ok_status() throws Exception {
+        mockMvc.perform(patch("/api/books/978-0321356680")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("new description"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.title", is("Effective Java")))
+                .andExpect(jsonPath("$.description", is("new description")))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    public void should_not_update_description_of_unknown_book_and_return_not_found_status() throws Exception {
+        mockMvc.perform(patch("/api/books/000-1234567890")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("new description"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$[0].logref", is("error")))
+                .andExpect(jsonPath("$[0].message", containsString("could not find book with ISBN: '000-1234567890'")))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
     // ---------- delete book ----------
 
     @Test
