@@ -102,6 +102,19 @@ public class BookControllerTest {
                 .andDo(MockMvcResultHandlers.print());
     }
 
+    @Test
+    public void should_not_allow_others_http_methods() throws Exception {
+        Book book = new Book("123-1234567890","My new book","Publisher");
+        book.addAuthor(new Author("John","Doe"));
+
+        mockMvc.perform(put("/api/books")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json(book)))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().string(""))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
     // ---------- get book ----------
 
     @Test
