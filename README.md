@@ -3,7 +3,7 @@
 
 # java-rest-books
 
-Book REST service.
+Sample code of DZone article: https://dzone.com/articles/leverage-http-status-codes-to-build-a-rest-service
 
 ## Requirements
 - JDK 8
