@@ -4,6 +4,7 @@ import com.github.sbouclier.javarestbooks.domain.Book;
 import com.github.sbouclier.javarestbooks.exception.BookIsbnAlreadyExistsException;
 import com.github.sbouclier.javarestbooks.exception.BookNotFoundException;
 import com.github.sbouclier.javarestbooks.repository.BookRepository;
+import io.swagger.annotations.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,10 +25,10 @@ import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
  * Book controller
  *
  * @author Stéphane Bouclier
- *
  */
 @RestController
 @RequestMapping(value = "/api/books")
+@Api(value = "Operations to interact with books collection")
 public class BookController {
 
     private static final int MAX_PAGE_SIZE = 50;
@@ -38,8 +39,20 @@ public class BookController {
         this.bookRepository = bookRepository;
     }
 
+    @ApiOperation(value = "Create a book", notes = "${bookController.createBook.notes}")
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Book successfully created",
+                    responseHeaders = @ResponseHeader(
+                            name = "Location",
+                            description = "The resulting URI of the book creation",
+                            response = String.class)),
+            @ApiResponse(code = 409, message = "Book with same ISBN already exists")
+    })
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public ResponseEntity<?> createBook(@Valid @RequestBody Book book, UriComponentsBuilder ucBuilder) {
+    public ResponseEntity<?> createBook(
+            @ApiParam(name = "book", value = "Book to create", required = true) @Valid @RequestBody Book book,
+            UriComponentsBuilder ucBuilder) {
         if (bookRepository.findByIsbn(book.getIsbn()).isPresent()) {
             throw new BookIsbnAlreadyExistsException(book.getIsbn());
         }
@@ -50,6 +63,11 @@ public class BookController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "Retrieve a book", notes = "${bookController.getBook.notes}")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Book successfully retrieved"),
+            @ApiResponse(code = 404, message = "Book does not exist")
+    })
     @GetMapping("/{isbn}")
     public ResponseEntity<Book> getBook(@PathVariable("isbn") String isbn) {
         return bookRepository.findByIsbn(isbn)
@@ -57,6 +75,37 @@ public class BookController {
                 .orElseThrow(() -> new BookNotFoundException(isbn));
     }
 
+    @ApiOperation(value = "Retrieve all paginated books", notes = "${bookController.getAllBooks.notes}")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "All books are retrieved",
+                    responseHeaders = @ResponseHeader(
+                            name = "X-Total-Count",
+                            description = "Total books number",
+                            response = Long.class)),
+            @ApiResponse(code = 204, message = "There is no book"),
+            @ApiResponse(code = 206, message = "Books are retrieved and there are others",
+                    responseHeaders = {
+                            @ResponseHeader(
+                                    name = "X-Total-Count",
+                                    description = "Total books number",
+                                    response = Long.class),
+                            @ResponseHeader(
+                                    name = "first",
+                                    description = "First page URI",
+                                    response = String.class),
+                            @ResponseHeader(
+                                    name = "last",
+                                    description = "Last page URI",
+                                    response = String.class),
+                            @ResponseHeader(
+                                    name = "next",
+                                    description = "Next page URI",
+                                    response = String.class),
+                            @ResponseHeader(
+                                    name = "prev",
+                                    description = "Previous page URI",
+                                    response = String.class)})
+    })
     @GetMapping
     public ResponseEntity<List<Book>> getAllBooks(
             @PageableDefault(size = MAX_PAGE_SIZE) Pageable pageable,
@@ -64,7 +113,7 @@ public class BookController {
             @RequestParam(required = false, defaultValue = "asc") String order) {
         final PageRequest pr = PageRequest.of(
                 pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by("asc" .equals(order) ? Sort.Direction.ASC : Sort.Direction.DESC, sort)
+                Sort.by("asc".equals(order) ? Sort.Direction.ASC : Sort.Direction.DESC, sort)
         );
 
         Page<Book> booksPage = bookRepository.findAll(pr);
@@ -97,6 +146,11 @@ public class BookController {
         }
     }
 
+    @ApiOperation(value = "Update a book", notes = "${bookController.updateBook.notes}")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Book successfully updated"),
+            @ApiResponse(code = 404, message = "Book does not exist")
+    })
     @PutMapping("/{isbn}")
     public ResponseEntity<Book> updateBook(@PathVariable("isbn") String isbn, @Valid @RequestBody Book book) {
         return bookRepository.findByIsbn(isbn)
@@ -113,6 +167,11 @@ public class BookController {
                 .orElseThrow(() -> new BookNotFoundException(isbn));
     }
 
+    @ApiOperation(value = "Update a book's description", notes = "${bookController.updateBookDescription.notes}")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Book's description successfully updated"),
+            @ApiResponse(code = 404, message = "Book does not exist")
+    })
     @PatchMapping("/{isbn}")
     public ResponseEntity<Book> updateBookDescription(@PathVariable("isbn") String isbn, @RequestBody String description) {
         return bookRepository.findByIsbn(isbn)
@@ -125,6 +184,12 @@ public class BookController {
                 .orElseThrow(() -> new BookNotFoundException(isbn));
     }
 
+    @ApiOperation(value = "Delete a book", notes = "${bookController.deleteBook.notes}")
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "Book successfully deleted"),
+            @ApiResponse(code = 404, message = "Book does not exist")
+    })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{isbn}")
     public ResponseEntity<?> deleteBook(@PathVariable("isbn") String isbn) {
         return bookRepository.findByIsbn(isbn)
