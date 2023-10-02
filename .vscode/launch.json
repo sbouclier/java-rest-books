@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-JavaRestBooksApplication<java-rest-books>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.github.sbouclier.javarestbooks.JavaRestBooksApplication",
+            "projectName": "java-rest-books",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
